@@ -2,10 +2,11 @@
 #-*- coding: utf-8 -*-
 
 
+from math import e
 from copy import deepcopy
-import sys
-sys.path.append('../../')
-from game import Game, alpha_beta_pruning
+from game import Game
+from minimax import MiniMaxAgent
+from mcts import MonteCarloAgent
 
 
 class MNKGame(Game):
@@ -48,48 +49,102 @@ class MNKGame(Game):
         current_player = 'O' if current_player == 'X' else 'X'
         return MNKGame(self.m, self.n, self.k, pieces, current_player)
 
-    def terminal(self):
-        pattern = [player * self.k for player in MNKGame.players]
+    def _terminal_helper(self):
+        patterns = [player * self.k for player in MNKGame.players]
         for i in range(self.m):
             for j in range(self.n + 1 - self.k):
                 temp = self.pieces[i][j: j + self.k]
                 temp = [p if p is not None else '-' for p in temp]
-                if ''.join(temp) in pattern:
-                    return True
+                temp = ''.join(temp)
+                for pattern in patterns:
+                    if pattern == temp:
+                        return pattern[0]
         for j in range(self.n):
             for i in range(self.m + 1 - self.k):
                 temp = [self.pieces[i + c][j] for c in range(self.k)]
                 temp = [p if p is not None else '-' for p in temp]
-                if ''.join(temp) in pattern:
-                    return True
+                temp = ''.join(temp)
+                for pattern in patterns:
+                    if pattern == temp:
+                        return pattern[0]
         for i in range(self.m + 1 - self.k):
             for j in range(self.n + 1 - self.k):
                 temp = [self.pieces[i + c][j + c] for c in range(self.k)]
                 temp = [p if p is not None else '-' for p in temp]
-                if ''.join(temp) in pattern:
-                    return True
+                temp = ''.join(temp)
+                for pattern in patterns:
+                    if pattern == temp:
+                        return pattern[0]
         for i in range(self.k - 1, self.m):
             for j in range(self.n + 1 - self.k):
                 temp = [self.pieces[i - c][j + c] for c in range(self.k)]
                 temp = [p if p is not None else '-' for p in temp]
-                if ''.join(temp) in pattern:
-                    return True
+                temp = ''.join(temp)
+                for pattern in patterns:
+                    if pattern == temp:
+                        return pattern[0]
+        if self.legal_moves() == []:
+            return 'T'
 
-    def utility(self):
+    def terminal(self):
+        if self._terminal_helper() in ('X', 'O', 'T'):
+            return True
+        return False
+
+    def winner(self):
+        temp = self._terminal_helper()
+        if temp in ('X', 'O'):
+            return temp
+
+    def loser(self):
+        temp = self._terminal_helper()
+        if temp in ('X', 'O'):
+            return 'O' if temp == 'X' else 'X'
+
+    def utility(self, agent):
         if self.terminal():
-            # Hard Coding
-            if self.current_player == 'X':
+            if self.current_player != agent.player:
                 return 1
             else:
                 return 0
 
-    def evaluate(self):
+    def evaluate(self, agent):
         if not self.terminal():
-            return 0.5
+            score = 0
+            opponent = 'O' if agent.player == 'X' else 'X'
+            for i in range(self.m):
+                for j in range(self.n + 1 - self.k):
+                    temp = self.pieces[i][j: j + self.k]
+                    score += temp.count(agent.player) - temp.count(opponent)
+                    print(temp)
+                    print(score)
+            for j in range(self.n):
+                for i in range(self.m + 1 - self.k):
+                    temp = [self.pieces[i + c][j] for c in range(self.k)]
+                    score += temp.count(agent.player) - temp.count(opponent)
+                    print(temp)
+                    print(score)
+            for i in range(self.m + 1 - self.k):
+                for j in range(self.n + 1 - self.k):
+                    temp = [self.pieces[i + c][j + c] for c in range(self.k)]
+                    score += temp.count(agent.player) - temp.count(opponent)
+                    print(temp)
+                    print(score)
+            for i in range(self.k - 1, self.m):
+                for j in range(self.n + 1 - self.k):
+                    temp = [self.pieces[i - c][j + c] for c in range(self.k)]
+                    score += temp.count(agent.player) - temp.count(opponent)
+                    print(temp)
+                    print(score)
+            print(score)
+            score = 1 / (1 + e ** score)
+            print('evaluate')
+            print(self)
+            print(score)
+            return score
 
-    @classmethod
-    def read_move_from_raw_input(cls):
-        move = raw_input("input your move:")
+    @staticmethod
+    def string_to_move(move):
         i, j = [int(x) for x in move.split(',')]
         return (i, j)
 
@@ -114,8 +169,10 @@ class MNKGame(Game):
 
 if __name__ == '__main__':
 
-    # TicTacToe
-    # game = MNKGame(3, 3, 3)
-    # Gomoku
-    game = MNKGame(19, 19, 5)
-    MNKGame.play(game, 3)
+    # game = MNKGame(3, 3, 3) # TicTacToe
+    # game = MNKGame(19, 19, 5) # Gomoku
+    game = MNKGame(9, 9, 5) # Mini Gomoku
+    agent = MiniMaxAgent('O', 3)
+    # agent = MonteCarloAgent('O', 60)
+
+    MNKGame.play(game, agent)
