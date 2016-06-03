@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <!--
+    <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+    -->
+    <script src="js/utils.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/mnkgame.js"></script>
+    <title>MNKGame</title>
+</head>
+
+<body>
+    <h1>Canvas MNKGame</h1>
+    <p id="turn"></p>
+    <p id="status"></p>
+    <canvas id="canvas"></canvas>
+    <p id="rule">rule:</p>
+    <script type="text/javascript">
+
+    var game = new MNKGame(3, 3, 3);
+
+    var squareSideLength = 50;
+
+    var cvs = document.querySelector("#canvas");
+    cvs.width = squareSideLength * game.m + 1;
+    cvs.height = squareSideLength * game.n + 1;
+    var ctx = cvs.getContext("2d");
+
+    function getCursorCoordinate(e) {
+        var x;
+        var y;
+        if (e.pageX != undefined && e.pageY != undefined) {
+            x = e.pageX;
+            y = e.pageY;
+        } else {
+            x = e.clientX;
+            x += document.body.scrollLeft;
+            x += document.documentElement.scrollLeft;
+            y = e.clientY;
+            y += document.body.scrollTop;
+            y += document.documentElement.scrollTop;
+        }
+        x -= cvs.offsetLeft;
+        y -= cvs.offsetTop;
+        return [x, y];
+    }
+
+    function getLogicalCoordinate(e) {
+        var coordinate = getCursorCoordinate(e);
+        var x = coordinate[0];
+        var y = coordinate[1];
+        var logicalX = parseInt(x / squareSideLength);
+        var logicalY = parseInt(y / squareSideLength);
+        // invert
+        return [logicalY, logicalX];
+    }
+
+    var drawBoard = function() {
+        // reset
+        ctx.clearRect(0, 0, cvs.width, cvs.height)
+        // draw vertical lines
+        for (var x = 0; x <= cvs.width; x += squareSideLength) {
+            ctx.moveTo(x + 0.5, 0);
+            ctx.lineTo(x + 0.5, cvs.height);
+        }
+        // Draw horizontal lines
+        for (var y = 0; y <= cvs.height; y += squareSideLength) {
+            ctx.moveTo(0, y + 0.5);
+            ctx.lineTo(cvs.width, y + 0.5);
+        }
+        ctx.strokeStyle = "grey";
+        ctx.stroke();
+    }
+
+    var drawPiece = function(coordinate) {
+        var x = coordinate[0];
+        var y = coordinate[1];
+        ctx.textAlign = "center";
+        // ctx.textBaseline = "bottom";
+        ctx.font = "bold 45px sans-serif";
+        cursorX = x * squareSideLength + squareSideLength * 0.8;
+        cursorY = y * squareSideLength + squareSideLength / 2 ;
+        console.log(game.currentPlayer);
+        console.log(cursorX);
+        console.log(cursorY);
+        // invert
+        ctx.fillText(game.currentPlayer, cursorY, cursorX);
+    }
+
+    function mnkgameOnClick(e) {
+        var move = getLogicalCoordinate(e);
+        legalMovesStr = game.legalMoves().map(function(arr) {
+            return arr.toString();
+        });
+        if (legalMovesStr.indexOf(move.toString()) != -1) {
+
+            console.log(game.toString());
+            console.log(move);
+            drawPiece(move);
+            game = game.stateAfterMove(move)
+
+            if (game.terminal()) {
+                console.log('you win');
+            }
+
+            move = alphaBetaPruning(game, 1);
+            console.log(game.toString());
+            console.log(move);
+            drawPiece(move);
+            game = game.stateAfterMove(move);
+            console.log(game.toString());
+
+            if (game.terminal()) {
+                console.log('you lose');
+            }
+        } else {
+            console.log('invalid move.');
+        }
+    };
+
+    drawBoard();
+    cvs.addEventListener("click", mnkgameOnClick, false);
+
+    </script>
+</body>
+</html>

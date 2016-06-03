@@ -7,6 +7,7 @@ from copy import deepcopy
 from game import Game
 from minimax import MiniMaxAgent
 from mcts import MonteCarloAgent
+from human import HumanAgent
 
 
 class MNKGame(Game):
@@ -116,31 +117,19 @@ class MNKGame(Game):
                 for j in range(self.n + 1 - self.k):
                     temp = self.pieces[i][j: j + self.k]
                     score += temp.count(agent.player) - temp.count(opponent)
-                    print(temp)
-                    print(score)
             for j in range(self.n):
                 for i in range(self.m + 1 - self.k):
                     temp = [self.pieces[i + c][j] for c in range(self.k)]
                     score += temp.count(agent.player) - temp.count(opponent)
-                    print(temp)
-                    print(score)
             for i in range(self.m + 1 - self.k):
                 for j in range(self.n + 1 - self.k):
                     temp = [self.pieces[i + c][j + c] for c in range(self.k)]
                     score += temp.count(agent.player) - temp.count(opponent)
-                    print(temp)
-                    print(score)
             for i in range(self.k - 1, self.m):
                 for j in range(self.n + 1 - self.k):
                     temp = [self.pieces[i - c][j + c] for c in range(self.k)]
                     score += temp.count(agent.player) - temp.count(opponent)
-                    print(temp)
-                    print(score)
-            print(score)
             score = 1 / (1 + e ** score)
-            print('evaluate')
-            print(self)
-            print(score)
             return score
 
     @staticmethod
@@ -169,10 +158,9 @@ class MNKGame(Game):
 
 if __name__ == '__main__':
 
-    # game = MNKGame(3, 3, 3) # TicTacToe
+    game = MNKGame(3, 3, 3) # TicTacToe
     # game = MNKGame(19, 19, 5) # Gomoku
-    game = MNKGame(9, 9, 5) # Mini Gomoku
-    agent = MiniMaxAgent('O', 3)
-    # agent = MonteCarloAgent('O', 60)
-
-    MNKGame.play(game, agent)
+    # agent = MiniMaxAgent('O', 3)
+    agent1 = HumanAgent('X')
+    agent2 = MonteCarloAgent('O', 5)
+    MNKGame.play(game, agent1, agent2)

@@ -46,19 +46,16 @@ class Game(object):
         pass
 
     @staticmethod
-    def play(game, agent):
+    def play(game, agent1, agent2):
+        print(game)
         while True:
+            move = agent1.get_move(game)
+            game = game.state_after_move(move)
             print(game)
-            move = raw_input("input your move:")
-            move = game.string_to_move(move)
-            if move in game.legal_moves():
-                game = game.state_after_move(move)
-                print(game)
-                if game.terminal():
-                    break
-                game = game.state_after_move(agent.get_move(game))
-                if game.terminal():
-                    print(game)
-                    break
-            else:
-                print('illegal move.')
+            if game.terminal():
+                break
+            move = agent2.get_move(game)
+            game = game.state_after_move(move)
+            print(game)
+            if game.terminal():
+                break
